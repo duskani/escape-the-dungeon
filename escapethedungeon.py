@@ -58,6 +58,11 @@ class Character:
         self.attack = 10
         self.inventory = []
         self.defense = 0
+        self.swordgot = False
+        self.shieldgot = False
+        self.magickeygot = False
+        self.swordequipped = False
+        self.shieldequipped = False
 
     def is_alive(self):
         return self.health > 0
@@ -120,7 +125,7 @@ class Game:
             "Treasure Vault": "Piles of gold and jewels, but danger lurks.\n"
         }
         self.delayed_print(descriptions.get(current_place_name, "There's nothing special here.\n"))
-        if self.current_location == 12:
+        if self.current_location == 12 and self.magickeygot == False:
             item = "Magic Key"
             self.player.add_item(item)
             self.delayed_print(f"while inspecting, you find the {item}!\n\n")
@@ -129,13 +134,26 @@ class Game:
             item = random.choice(self.data["items"])
             self.player.add_item(item)
             self.delayed_print(f"While inspecting, you found a {item}!\n\n")
-            if item == "Magic Key":
+            if item == "Magic Key" and self.magickeygot == False:
                 self.final_door_unlocked = True
+                self.magickeygot = True
+                self.inventory.append(item)
                 self.delayed_print("This key looks important. It might unlock the final door.")
-            elif item == "Rusty Sword":
+            elif item == "Rusty Sword" and self.swordgot == False:
                 self.player.attack = self.player.attack + 10
-            elif item == "Shield":
+                self.swordgot = True
+                self.inventory.append(item)
+                self.delayed_print("you find a Rusty sword on the ground, you pick it up and decide its better than nothing.\n")
+            elif item == "Shield" and self.shieldgot == False:
                 self.player.defense = 5
+                self.shieldgot = True
+                self.inventory.append(item)
+                self.delayed_print("you find a Shield on the ground, you can finally protect yourself a bit more.\n")
+            else:
+                if item == "Rusty Sword" or "Shield":
+                    self.delayed_print("You found {item}, but you tossed it aside as you already have one.\n")
+                else:
+                    self.delayed_print("you found another key, but when you picked it up it crumbled to dust.\n")
         else:
             self.delayed_print("You didn't find anything useful.")
 
@@ -215,12 +233,55 @@ class Game:
 
         while self.player.is_alive():
             self.choose_location()
-            action = input("Do you want to (I)nspect the room or (M)ove to another location? ").lower()
+            action = input("Do you want to (I)nspect the room, (M)ove to another location or check your (inv)entory? ").lower()
             if self.current_location == 10: #checks to see if player is in entrance / exit
                 if action == 'i':
                     self.check_final_door()
                 elif action == 'm':
                     continue
+                elif action == 'inv':
+                    print("You have the following items:")
+                    for item in self.player.inventory:
+                        print(f"- {item}")
+                        action = input("(E)xit, (eq)uip / unequip, (u)se, (d)rop").lower()
+                        if action == "e":
+                            continue
+                        elif action == "eq":
+                            selection = input("What would you like to equip? ").lower()
+                            if selection == "rusty sword" and self.swordequipped == False:
+                                self.player.attack = self.player.attack + 10
+                                self.delayed_print("You equip the Rusty Sword. (+10 attack!)")
+                                self.swordeqqipped = True
+                            elif selection == "shield" and self.shieldequipped == False:
+                                self.player.defense = self.player.defense + 5
+                                self.delayed_print("You equip the Shield. (+5 defense!)")
+                                self.shieldequipped = True
+                            elif selection == "rusty sword" and self.swordequipped == True:
+                                self.player.attack = self.player.attack - 10
+                                self.delayed_print("You unequip the Rusty Sword. (-10 attack!)")
+                                self.swordeqqipped = False
+                            elif selection == "shield" and self.shieldequipped == True:
+                                self.player.defense = self.player.defense - 5
+                                self.delayed_print("You unequip the Shield. (-5 defense!)")
+                                self.shieldequipped = False
+                            else:
+                                print("you cant equip / unequip that item.")
+                        elif action == "u":
+                            selection = input("What would you like to use? ").lower()
+                            if selection == "health potion":
+                                self.player.health = self.player.health + 20
+                                self.delayed_print("You drink the Health Potion. (+20 health!)")
+                            else:
+                                print("you cant use that item.")
+                        elif action == "d":
+                            selection = input("What would you like to drop? ").lower()
+                            if selection in self.player.inventory:
+                                self.player.inventory.remove(selection)
+                                self.delayed_print(f"You drop the {selection}.")
+                            else:
+                                print("you dont have that item.")
+
+
                 else:
                     print("Invalid choice. Try again.")
             
@@ -229,6 +290,50 @@ class Game:
                     self.inspect_location()
                 elif action == 'm':
                     continue
+                elif action == 'inv':
+                    if self.player.inventory == []:
+                        print("You have no items in your inventory.")
+                    else:
+                        print("You have the following items:")
+                        for item in self.player.inventory:
+                            print(f"- {item}")
+                            action = input("(E)xit, (eq)uip / unequip, (u)se, (d)rop").lower()
+                            if action == "e":
+                                continue
+                            elif action == "eq":
+                                selection = input("What would you like to equip? ").lower()
+                                if selection == "rusty sword" and self.swordequipped == False:
+                                    self.player.attack = self.player.attack + 10
+                                    self.delayed_print("You equip the Rusty Sword. (+10 attack!)")
+                                    self.swordeqqipped = True
+                                elif selection == "shield" and self.shieldequipped == False:
+                                    self.player.defense = self.player.defense + 5
+                                    self.delayed_print("You equip the Shield. (+5 defense!)")
+                                    self.shieldequipped = True
+                                elif selection == "rusty sword" and self.swordequipped == True:
+                                    self.player.attack = self.player.attack - 10
+                                    self.delayed_print("You unequip the Rusty Sword. (-10 attack!)")
+                                    self.swordeqqipped = False
+                                elif selection == "shield" and self.shieldequipped == True:
+                                    self.player.defense = self.player.defense - 5
+                                    self.delayed_print("You unequip the Shield. (-5 defense!)")
+                                    self.shieldequipped = False
+                                else:
+                                    print("you cant equip / unequip that item.")
+                            elif action == "u":
+                                selection = input("What would you like to use? ").lower()
+                                if selection == "health potion":
+                                    self.player.health = self.player.health + 20
+                                    self.delayed_print("You drink the Health Potion. (+20 health!)")
+                                else:
+                                    print("you cant use that item.")
+                            elif action == "d":
+                                selection = input("What would you like to drop? ").lower()
+                                if selection in self.player.inventory:
+                                    self.player.inventory.remove(selection)
+                                    self.delayed_print(f"You drop the {selection}.")
+                                else:
+                                    print("you dont have that item.")
                 else:
                     print("Invalid choice. Try again.")
 
@@ -245,5 +350,4 @@ if __name__ == "__main__":
     os.system('cls')
     game = Game()
     game.play()
-
 
